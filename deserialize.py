@@ -253,14 +253,14 @@ def script_GetOp(bytes):
       vch = bytes[i:i+nSize]
       i += nSize
 
-    yield (opcode, vch)
+    yield (opcode, vch, i)
 
 def script_GetOpName(opcode):
   return (opcodes.whatis(opcode)).replace("OP_", "")
 
 def decode_script(bytes):
   result = ''
-  for (opcode, vch) in script_GetOp(bytes):
+  for (opcode, vch, i) in script_GetOp(bytes):
     if len(result) > 0: result += " "
     if opcode <= opcodes.OP_PUSHDATA4:
       result += "%d:"%(opcode,)
