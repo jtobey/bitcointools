@@ -2,7 +2,10 @@
 # Misc util routines
 #
 
-from bsddb.db import *
+try:
+  from bsddb.db import *
+except:
+  pass
 
 def long_hex(bytes):
   return bytes.encode('hex_codec')

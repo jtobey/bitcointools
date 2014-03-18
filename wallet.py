@@ -37,11 +37,16 @@ def parse_wallet(db, item_callback):
     kds.clear(); kds.write(key)
     vds.clear(); vds.write(value)
 
-    type = kds.read_string()
+    try:
+      type = kds.read_string()
 
-    d["__key__"] = key
-    d["__value__"] = value
-    d["__type__"] = type
+      d["__key__"] = key
+      d["__value__"] = value
+      d["__type__"] = type
+
+    except Exception, e:
+      print("ERROR attempting to read data from wallet.dat, type %s"%type)
+      continue
 
     try:
       if type == "tx":
@@ -96,8 +101,12 @@ def parse_wallet(db, item_callback):
       elif type == "bestblock":
         d['nVersion'] = vds.read_int32()
         d.update(parse_BlockLocator(vds))
+      elif type == "cscript":
+        d['scriptHash'] = kds.read_bytes(20)
+        d['script'] = vds.read_bytes(vds.read_compact_size())
       else:
-        print "Unknown key type: "+type
+        print "Skipping item of type "+type
+        continue
       
       item_callback(type, d)
 
@@ -241,6 +250,8 @@ def dump_wallet(db_env, print_wallet, print_wallet_transactions, transaction_fil
             (d['account'], d['nCreditDebit'], d['otherAccount'], time.ctime(d['nTime']), d['n'], d['comment']))
     elif type == "bestblock":
       print deserialize_BlockLocator(d)
+    elif type == "cscript":
+      print("CScript: %s : %s"%(public_key_to_bc_address(d['scriptHash'], "\x01"), long_hex(d['script'])))
     else:
       print "Unknown key type: "+type
 

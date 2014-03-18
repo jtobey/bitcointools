@@ -57,11 +57,8 @@ def b58decode(v, length):
   return result
 
 try:
-  # Python Crypto library is at: http://www.dlitz.net/software/pycrypto/
-  # Needed for RIPEMD160 hash function, used to compute
-  # Bitcoin addresses from internal public keys.
-  import Crypto.Hash.SHA256 as SHA256
-  import Crypto.Hash.RIPEMD160 as RIPEMD160
+  import hashlib
+  hashlib.new('ripemd160')
   have_crypto = True
 except ImportError:
   have_crypto = False
@@ -69,21 +66,23 @@ except ImportError:
 def hash_160(public_key):
   if not have_crypto:
     return ''
-  h1 = SHA256.new(public_key).digest()
-  h2 = RIPEMD160.new(h1).digest()
+  h1 = hashlib.sha256(public_key).digest()
+  r160 = hashlib.new('ripemd160')
+  r160.update(h1)
+  h2 = r160.digest()
   return h2
 
-def public_key_to_bc_address(public_key):
-  if not have_crypto:
+def public_key_to_bc_address(public_key, version="\x00"):
+  if not have_crypto or public_key is None:
     return ''
   h160 = hash_160(public_key)
-  return hash_160_to_bc_address(h160)
+  return hash_160_to_bc_address(h160, version=version)
 
-def hash_160_to_bc_address(h160):
+def hash_160_to_bc_address(h160, version="\x00"):
   if not have_crypto:
     return ''
-  vh160 = "\x00"+h160  # \x00 is version 0
-  h3=SHA256.new(SHA256.new(vh160).digest()).digest()
+  vh160 = version+h160
+  h3=hashlib.sha256(hashlib.sha256(vh160).digest()).digest()
   addr=vh160+h3[0:4]
   return b58encode(addr)
 

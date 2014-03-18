@@ -22,12 +22,36 @@ def main():
                     help="Skip entries with keys that contain given string")
   parser.add_option("--tweakspent", dest="tweakspent",
                     help="Tweak transaction to mark unspent")
+  parser.add_option("--noaccounts", action="store_true", dest="noaccounts", default=False,
+                    help="Drops all accounts from the old wallet")
+  parser.add_option("--nosettings", action="store_true", dest="nosettings", default=False,
+                    help="Drops all settings from the old wallet")
+  parser.add_option("--notxes", action="store_true", dest="notxes", default=False,
+                    help="Drops transactions from the old wallet, open Bitcoin with -rescan after this")
+  parser.add_option("--noaddresses", action="store_true", dest="nopubkeys", default=False,
+                    help="Drops addresses from the old wallet, this will clear your address book leaving only one address\
+                          WARNING: Make sure to refill your keypool after using this (by simply unlocking the wallet)")
   (options, args) = parser.parse_args()
 
   if options.datadir is None:
     db_dir = determine_db_dir()
   else:
     db_dir = options.datadir
+
+  skip_types = []
+  if options.nosettings:
+    skip_types.append("version")
+    skip_types.append("setting")
+    skip_types.append("defaultkey")
+  if options.noaccounts:
+    skip_types.append("acc")
+    skip_types.append("acentry")
+  if options.notxes:
+    skip_types.append("tx")
+    skip_types.append("bestblock")
+  if options.nopubkeys:
+    skip_types.append("name")
+    skip_types.append("pool")
 
   try:
     db_env = create_env(db_dir)
@@ -52,6 +76,12 @@ def main():
       return True
     rewrite_wallet(db_env, options.outfile, tweak_spent_callback)
     pass
+  elif len(skip_types) > 0:
+    def pre_put_callback(type, data):
+      if skip_types.count(type) > 0:
+        return False
+      return True
+    rewrite_wallet(db_env, options.outfile, pre_put_callback)
   else:
     rewrite_wallet(db_env, options.outfile)
 

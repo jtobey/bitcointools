@@ -1,11 +1,27 @@
+NOTE:
+
+These tools are becoming obsolete as we move away from using Berkeley DB in
+Bitcoin-Qt/bitcoind.
+
+If you are looking for a tool to manipulate the wallet.dat file, you might
+want to try https://github.com/jackjack-jj/pywallet
+
+REQUIREMENTS:
+
+You must run Bitcoin-Qt/bitcoind versions 0.6.0 through 0.7.* with the "-detachdb" option
+or these tools will be unable to read the Berkeley DB files.
+
+Now that the bitcoin blockchain is more than 2GB big, some of these tools will no longer
+run on 32-bit systems!
+
+Running on a 32-bit system will result in a 'Cannot allocate memory' error when the tools
+try to mmap the second blk000?.dat file.
+
 ----- dbdump.py -----
 Run    dbdump.py --help    for usage.  Database files are opened read-only, but
 you might want to backup your Bitcoin wallet.dat file just in case.
 
 You must quit Bitcoin before reading the transactions, blocks, or address database files.
-
-Requires the pycrypto library from  http://www.dlitz.net/software/pycrypto/
-to translate public keys into human-friendly Bitcoin addresses.
 
 Examples:
 
